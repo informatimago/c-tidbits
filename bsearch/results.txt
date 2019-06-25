@@ -1,0 +1,19 @@
+gcc -I/usr/local/gcc/include  -I/usr/local/include -fsanitize=address -fsanitize=null -fsanitize=bounds -fsanitize=vla-bound -fsanitize=object-size -fsanitize=unreachable -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fsanitize=nonnull-attribute -fsanitize=returns-nonnull-attribute -fsanitize=bool -fsanitize=enum -fsanitize-address-use-after-scope -fsanitize-undefined-trap-on-error -fstack-protector-all -fstack-check -g -g3 -ggdb -O0 -std=c11 -L/usr/local/gcc/lib64 -L/usr/local/gcc/lib -L/usr/local/lib -L/usr/lib -L/lib -rdynamic  -lgc -o bsearch bsearch.c
+./bsearch
+A string: "Hello"
+A vector: ("foo" "bar" "baz")
+A vector in an object: ("foo" "bar" "baz")
+Before sort: ("foo" ("foo" "bar") "bar" ("bar" "foo" "baz") "baz")
+compare "foo" vs. ("foo" "bar") -> -1
+compare ("bar" "foo" "baz") vs. "baz" -> 1
+compare "bar" vs. "baz" -> -1
+compare "foo" vs. "bar" -> 1
+compare "foo" vs. "baz" -> 1
+compare "foo" vs. ("bar" "foo" "baz") -> -1
+compare "foo" vs. "bar" -> 1
+compare ("foo" "bar") vs. ("bar" "foo" "baz") -> 1
+After  sort: ("bar" "baz" "foo" ("bar" "foo" "baz") ("foo" "bar"))
+compare "bar" vs. "foo" -> -1
+compare "bar" vs. "baz" -> -1
+compare "bar" vs. "bar" -> 0
+object bar found: "bar"

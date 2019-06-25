@@ -1,0 +1,31 @@
+-*- mode: compilation; default-directory: "~/src/c/literal/" -*-
+Compilation started at Fri Jan 25 15:42:42
+
+make 
+make literal.c literal.s
+make[1]: `literal.c' is up to date.
+make[1]: `literal.s' is up to date.
+export CC=/opt/local/bin/gcc ; $CC --version ; make clean-o literal.c.o literal.s.o
+gcc (MacPorts gcc8 8.2.0_3) 8.2.0
+Copyright (C) 2018 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+rm -f literal.c.o literal.s.o
+time /opt/local/bin/gcc -c -o literal.c.o literal.c
+        3.02 real         2.83 user         0.14 sys
+time /opt/local/bin/gcc -c -o literal.s.o literal.s
+        0.44 real         0.40 user         0.01 sys
+export CC=/usr/bin/gcc       ; $CC --version ; make clean-o literal.c.o literal.s.o
+Configured with: --prefix=/Applications/Xcode.app/Contents/Developer/usr --with-gxx-include-dir=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/usr/include/c++/4.2.1
+Apple LLVM version 10.0.0 (clang-1000.11.45.5)
+Target: x86_64-apple-darwin18.2.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+rm -f literal.c.o literal.s.o
+time /usr/bin/gcc -c -o literal.c.o literal.c
+        1.05 real         0.92 user         0.11 sys
+time /usr/bin/gcc -c -o literal.s.o literal.s
+        2.82 real         2.65 user         0.15 sys
+
+Compilation finished at Fri Jan 25 15:42:4
