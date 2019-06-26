@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <sysexits.h>
 
+#ifdef linux
+int digittoint(int digit){
+    return digit-'0';}
+#endif
+
 void error(const char* format,...){
     va_list ap;
     va_start(ap,format);
