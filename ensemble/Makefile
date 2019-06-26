@@ -32,7 +32,7 @@ lib$(NAME).so:lib$(NAME).a
 	s=$^ ; mkdir -p $${s}.exploded \
 	&& cd $${s}.exploded \
 	&& ar x ../$$s \
-	&& $(CC) -dynamic -o ../$(^:.a=.so) *.o
+	&& $(CC) -shared -o ../$(^:.a=.so) *.o
 	- s=$^ ; rm -rf $${s}.exploded
 
 endif
