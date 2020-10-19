@@ -24,7 +24,7 @@ void h(const int * out){
     /* (*out)=42; */
 }
 
-int cmain(){
+int main(){
     int a=0;
     f(&a);
     return 0;
