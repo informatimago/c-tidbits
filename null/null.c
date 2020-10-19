@@ -3,6 +3,10 @@ void f(){
     static int* q;
     static int* h;
     p=0;
-    q=0xdeadface;
+    q=(int*)0xdeadface;
     h=(int*)0xffffff01;
 }
+
+int main(){
+    f();
+    return 0;}

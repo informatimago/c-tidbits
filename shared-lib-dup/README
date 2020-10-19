@@ -1,0 +1,37 @@
+This project demonstrates how to wrap shared libraries to resolve name duplicates:
+
+libx and liby both export a() b() c() and d()
+libwx and libwy define x_a() x_b() (calling to libx) and y_c() y_d() (calling to liby).
+
+
+[pjb@despina-1 org.macosforge.xquartz:0 shared-lib-dup 75Gi]$ make
+cc    -c -o main.o main.c
+cc    -c -o xw.o xw.c
+cc    -c -o x.o x.c
+ar r libx.a x.o
+ar: creating archive libx.a
+cc -shared -o libxw.dylib xw.o libx.a
+cc    -c -o yw.o yw.c
+cc    -c -o y.o y.c
+ar r liby.a y.o
+ar: creating archive liby.a
+cc -shared -o libyw.dylib yw.o liby.a
+cc -o pgm main.o libxw.dylib libyw.dylib
+rm x.o y.o
+
+~/src/c/shared-lib-dup
+[pjb@despina-1 org.macosforge.xquartz:0 shared-lib-dup 75Gi]$ ./pgm
+xw.c::x_a()
+x.c::a()
+xw.c::x_b()
+x.c::b()
+yw.c::y_c()
+y.c::c()
+yw.c::y_d()
+y.c::d()
+
+~/src/c/shared-lib-dup
+[pjb@despina-1 org.macosforge.xquartz:0 shared-lib-dup 75Gi]$
+
+
+See also https://github.com/informatimago/c-tidbits

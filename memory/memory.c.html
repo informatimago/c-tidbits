@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!-- Created by htmlize-1.43 in css mode. -->
+<html>
+  <head>
+    <title>memory.c</title>
+    <style type="text/css">
+    <!--
+      body {
+        color: #00ff00;
+        background-color: #000000;
+      }
+      .comment {
+        /* font-lock-comment-face */
+        color: #ff0000;
+        font-style: italic;
+      }
+      .comment-delimiter {
+        /* font-lock-comment-delimiter-face */
+        color: #ff0000;
+        font-style: italic;
+      }
+      .constant {
+        /* font-lock-constant-face */
+        color: #7fffd4;
+      }
+      .flycheck-error {
+        /* flycheck-error */
+        text-decoration: underline;
+      }
+      .function-name {
+        /* font-lock-function-name-face */
+        color: #87cefa;
+      }
+      .keyword {
+        /* font-lock-keyword-face */
+        color: #00ffff;
+      }
+      .preprocessor {
+        /* font-lock-preprocessor-face */
+        color: #b0c4de;
+      }
+      .string {
+        /* font-lock-string-face */
+        color: #da70d6;
+      }
+      .type {
+        /* font-lock-type-face */
+        color: #98fb98;
+      }
+      .variable-name {
+        /* font-lock-variable-name-face */
+        color: #eedd82;
+      }
+
+      a {
+        color: inherit;
+        background-color: inherit;
+        font: inherit;
+        text-decoration: inherit;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    -->
+    </style>
+  </head>
+  <body>
+    <pre>
+<span class="preprocessor">#include</span> <span class="string"><span class="flycheck-error">!&lt;</span></span><span class="string">stdlib.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="string">&lt;stdio.h&gt;</span>
+
+<span class="preprocessor">#if</span> 0
+
+<span class="comment-delimiter">/*</span><span class="comment">
+Very simple malloc/free:
+</span><span class="comment-delimiter">*/</span>
+
+<span class="type">char</span> <span class="variable-name">memory</span>[0x1000000];
+<span class="type">char</span>* <span class="variable-name">next</span>=memory;
+<span class="type">void</span>* <span class="function-name">malloc</span>(<span class="type">size_t</span> <span class="variable-name">size</span>){
+    <span class="type">void</span>* <span class="variable-name">result</span>=next;
+    next+=size;
+    <span class="keyword">return</span> (next&lt;memory+<span class="keyword">sizeof</span>(memory))?result:<span class="constant">NULL</span>;}
+<span class="type">void</span> <span class="function-name">free</span>(<span class="type">void</span>* <span class="variable-name">pointer</span>){
+    (<span class="type">void</span>)pointer;}
+<span class="preprocessor">#endif</span>
+
+
+<span class="comment-delimiter">/*</span><span class="comment">
+Let's implement a naive malloc/free:
+the memory is made of blocks. Each block has a rounded 32-bit block size, followed by that number of bytes.
+free blocks have a (int) pointer to the next free block after the block size. 
+(therefore blocks of size 0 are rounded to 4).
+To simplify freellist management, we always keep a small freeblock as head of the list.
+</span><span class="comment-delimiter">*/</span>
+
+<span class="preprocessor">#define</span> <span class="variable-name">MEMORY_WORDSIZE</span> ((<span class="type">unsigned</span>)4)
+
+<span class="preprocessor">#ifdef</span> DEBUG
+<span class="preprocessor">#define</span> <span class="variable-name">MEMORY_SIZE</span> 0x100
+<span class="preprocessor">#else</span>
+<span class="preprocessor">#define</span> <span class="variable-name">MEMORY_SIZE</span> 0x1000000
+<span class="preprocessor">#endif</span>
+<span class="type">unsigned</span> <span class="type">char</span> <span class="variable-name">memory</span>[MEMORY_SIZE];
+<span class="type">unsigned</span> <span class="variable-name">freelist_head</span>;
+
+<span class="type">void</span> <span class="function-name">store</span>(<span class="type">unsigned</span> <span class="variable-name">address</span>,<span class="type">unsigned</span> <span class="variable-name">value</span>){
+    memory[address]=0xff&amp;(value&gt;&gt;24);
+    memory[address+1]=0xff&amp;(value&gt;&gt;16);
+    memory[address+2]=0xff&amp;(value&gt;&gt;8);
+    memory[address+3]=0xff&amp;(value);
+<span class="preprocessor">#ifdef</span> DEBUG_STORE
+    printf(<span class="string">"store %08x %08x\n"</span>,address,value);
+    printf(<span class="string">"      %02x %02x %02x %02x\n"</span>,memory[address],memory[address+1],memory[address+2],memory[address+3]);
+<span class="preprocessor">#endif</span>
+}
+
+<span class="type">unsigned</span> <span class="function-name">load</span>(<span class="type">unsigned</span> <span class="variable-name">address</span>){
+<span class="preprocessor">#ifdef</span> DEBUG_STORE
+    printf(<span class="string">"load %08x -&gt; %08x\n"</span>,address, ((((<span class="type">unsigned</span>)(memory[address]))&lt;&lt;24)
+                                           |(((<span class="type">unsigned</span>)(memory[address+1]))&lt;&lt;16)
+                                           |(((<span class="type">unsigned</span>)(memory[address+2]))&lt;&lt;8)
+                                           |((<span class="type">unsigned</span>)(memory[address+3]))));
+<span class="preprocessor">#endif</span>
+    <span class="keyword">return</span> ((((<span class="type">unsigned</span>)(memory[address]))&lt;&lt;24)
+            |(((<span class="type">unsigned</span>)(memory[address+1]))&lt;&lt;16)
+            |(((<span class="type">unsigned</span>)(memory[address+2]))&lt;&lt;8)
+            |((<span class="type">unsigned</span>)(memory[address+3])));}
+
+<span class="type">void</span> <span class="function-name">memory_initialize</span>(){
+    freelist_head=MEMORY_WORDSIZE;
+    <span class="type">unsigned</span> <span class="variable-name">freelist</span>=3*MEMORY_WORDSIZE; <span class="comment-delimiter">// </span><span class="comment">2 for the head, 1 for the freelist block size.
+</span>    store(freelist_head-MEMORY_WORDSIZE,MEMORY_WORDSIZE);
+    store(freelist_head,freelist);
+    store(freelist-MEMORY_WORDSIZE,MEMORY_SIZE-3*MEMORY_WORDSIZE);
+    store(freelist,0);}
+
+<span class="type">unsigned</span> <span class="function-name">memory_block_size</span>(<span class="type">unsigned</span> <span class="variable-name">freeblock</span>){
+    <span class="keyword">return</span> load(freeblock-MEMORY_WORDSIZE);}
+<span class="comment-delimiter">// </span><span class="comment">The size of the block is actually MEMORY_WORDSIZE+memory_block_size(block), for the size stored before the block.
+</span><span class="comment-delimiter">// </span><span class="comment">The minimum size we can cut out of a freeblock is 2*MEMORY_WORDSIZE.
+</span>
+<span class="type">unsigned</span> <span class="function-name">memory_block_next</span>(<span class="type">unsigned</span> <span class="variable-name">freeblock</span>){
+    <span class="keyword">return</span> load(freeblock);}
+
+<span class="type">unsigned</span> <span class="function-name">memory_round_up</span>(<span class="type">size_t</span> <span class="variable-name">size</span>){
+    <span class="keyword">return</span> (size&lt;=0)
+            ?MEMORY_WORDSIZE
+            :(<span class="type">unsigned</span>)(1+((size-1)/MEMORY_WORDSIZE))*MEMORY_WORDSIZE;}
+
+<span class="type">unsigned</span> <span class="function-name">search_best_fit</span>(<span class="type">unsigned</span> <span class="variable-name">freelist</span>,<span class="type">unsigned</span> <span class="variable-name">blocksize</span>){
+    <span class="type">unsigned</span> <span class="variable-name">minimum_free_size</span>=2*MEMORY_WORDSIZE+blocksize;
+    <span class="type">unsigned</span> <span class="variable-name">previous_bestfit</span>=0;
+    <span class="type">unsigned</span> <span class="variable-name">bestfit</span>=0;
+    <span class="type">unsigned</span> <span class="variable-name">bestfit_size</span>=0;
+    <span class="type">unsigned</span> <span class="variable-name">freeblock</span>;
+    <span class="keyword">while</span>(0!=(freeblock=memory_block_next(freelist))){
+        <span class="type">unsigned</span> <span class="variable-name">freeblock_size</span>=memory_block_size(freeblock);
+        <span class="keyword">if</span>(minimum_free_size&lt;=freeblock_size){
+            <span class="keyword">if</span>((bestfit_size==0)||(freeblock_size&lt;bestfit_size)){
+                previous_bestfit=freelist;
+                bestfit=freeblock;
+                bestfit_size=freeblock_size;}}
+        freelist=freeblock;}
+    <span class="comment-delimiter">// </span><span class="comment">remove the bestfit from the list:
+</span>    store(previous_bestfit,memory_block_next(bestfit)); 
+    <span class="keyword">return</span> bestfit;}
+
+<span class="type">void</span> <span class="function-name">memory_free_list_add</span>(<span class="type">unsigned</span> <span class="variable-name">newfree</span>){
+    store(newfree,memory_block_next(freelist_head));
+    store(freelist_head,newfree);}
+
+<span class="type">void</span>* <span class="function-name">malloc</span>(<span class="type">size_t</span> <span class="variable-name">size</span>){
+    <span class="type">unsigned</span> <span class="variable-name">blocksize</span>=memory_round_up(size);
+    <span class="type">unsigned</span> <span class="variable-name">freeblock</span>=search_best_fit(freelist_head,size);
+    <span class="keyword">if</span>(freeblock==0){
+        <span class="keyword">return</span> <span class="constant">NULL</span>;}
+    <span class="type">unsigned</span> <span class="variable-name">freeblock_size</span>=memory_block_size(freeblock);
+    <span class="keyword">if</span>(blocksize&lt;freeblock_size){
+        <span class="comment-delimiter">// </span><span class="comment">let's cut:
+</span>        <span class="type">unsigned</span> <span class="variable-name">freeblock_end</span>=freeblock+freeblock_size;
+        <span class="type">unsigned</span> <span class="variable-name">remainfree</span>=freeblock+blocksize+MEMORY_WORDSIZE;
+        <span class="type">unsigned</span> <span class="variable-name">remainfree_size</span>=freeblock_end-remainfree;
+        store(freeblock-MEMORY_WORDSIZE,blocksize);
+        store(remainfree-MEMORY_WORDSIZE,remainfree_size);
+        memory_free_list_add(remainfree);}
+    <span class="keyword">return</span> &amp;(memory[freeblock]);}
+
+<span class="type">void</span> <span class="function-name">free</span>(<span class="type">void</span>* <span class="variable-name">pointer</span>){
+    <span class="keyword">if</span>(<span class="constant">NULL</span>!=pointer){
+        <span class="type">unsigned</span> <span class="variable-name">address</span>=(<span class="type">unsigned</span>)((<span class="type">unsigned</span> <span class="type">char</span>*)pointer-&amp;memory[0]);
+        <span class="keyword">if</span>(address&lt;MEMORY_SIZE){
+            memory_free_list_add(address);}}}
+
+<span class="keyword">typedef</span> <span class="keyword">enum</span> {
+    <span class="variable-name">memory_null</span>             = 0x00,
+    <span class="variable-name">memory_unaligned</span>        = 0x01,
+    <span class="variable-name">memory_invalid</span>          = 0x10, <span class="comment-delimiter">// </span><span class="comment">never with unaligned.
+</span>    <span class="variable-name">memory_free_size</span>        = 0x20, 
+    <span class="variable-name">memory_free_block</span>       = 0x30, 
+    <span class="variable-name">memory_free_next</span>        = 0x40, 
+    <span class="variable-name">memory_allocated_block</span>  = 0xA0,
+    <span class="variable-name">memory_allocated_size</span>   = 0xB0, 
+} <span class="type">memory_address_class</span>;
+
+<span class="type">unsigned</span> <span class="function-name">memory_address_in_free_block</span>(<span class="type">unsigned</span> <span class="variable-name">address</span>){
+    <span class="comment-delimiter">// </span><span class="comment">Note address==0 is in header, but we consider it as NULL.
+</span>    <span class="type">unsigned</span> <span class="variable-name">current</span>=freelist_head;
+    <span class="keyword">while</span>((current!=0)
+          &amp;&amp;((address&lt;current-MEMORY_WORDSIZE)
+             ||((current+memory_block_size(current))&lt;=address))){
+        current=memory_block_next(current);}
+    <span class="keyword">return</span> current;}
+
+<span class="type">memory_address_class</span> <span class="function-name">memory_classify_address</span>(<span class="type">unsigned</span> <span class="variable-name">address</span>){
+    <span class="keyword">if</span>(address==0){
+        <span class="keyword">return</span> memory_null;}
+    <span class="keyword">if</span>(MEMORY_SIZE&lt;=address){
+        <span class="keyword">return</span> memory_invalid;}
+    <span class="type">unsigned</span> <span class="variable-name">freeblock</span>=memory_address_in_free_block(address);
+    <span class="keyword">if</span>(freeblock){
+        <span class="keyword">if</span>(address==freeblock-MEMORY_WORDSIZE){
+            <span class="keyword">return</span> memory_free_size;}
+        <span class="keyword">else</span> <span class="keyword">if</span>(address&lt;freeblock){
+            <span class="keyword">return</span> memory_free_size|memory_unaligned;}
+        <span class="keyword">else</span> <span class="keyword">if</span>(address==freeblock){
+            <span class="keyword">return</span> memory_free_next;}
+        <span class="keyword">else</span> <span class="keyword">if</span>(address&lt;freeblock+MEMORY_WORDSIZE){
+            <span class="keyword">return</span> memory_free_next|memory_unaligned;}
+        <span class="keyword">else</span> <span class="keyword">if</span>(address==freeblock+MEMORY_WORDSIZE){
+            <span class="keyword">return</span> memory_free_block;}
+        <span class="keyword">else</span>{
+            <span class="keyword">return</span> memory_free_block|memory_unaligned;}}
+    <span class="type">unsigned</span> <span class="variable-name">block</span>=4;
+    <span class="keyword">while</span>((block&lt;MEMORY_SIZE)
+          &amp;&amp;((address&lt;block-MEMORY_WORDSIZE)
+             ||(block+memory_block_size(block)&lt;=address))){
+        block=block+memory_block_size(block)+MEMORY_WORDSIZE;}
+    <span class="comment-delimiter">// </span><span class="comment">cannot be invalid, since we tested before the loop.
+</span>    <span class="keyword">if</span>(address==block-MEMORY_WORDSIZE){
+        <span class="keyword">return</span> memory_allocated_size;}
+    <span class="keyword">else</span> <span class="keyword">if</span>(address&lt;block){
+        <span class="keyword">return</span> memory_allocated_size|memory_unaligned;}
+    <span class="keyword">else</span> <span class="keyword">if</span>(address==block){
+        <span class="keyword">return</span> memory_allocated_block;}
+    <span class="keyword">else</span>{
+        <span class="keyword">return</span> memory_allocated_block|memory_unaligned;}}
+
+<span class="type">void</span> <span class="function-name">memory_dump</span>(<span class="type">FILE</span>* <span class="variable-name">out</span>){
+    <span class="type">unsigned</span> <span class="variable-name">block</span>=4;
+    <span class="keyword">while</span>(block&lt;MEMORY_SIZE){
+        <span class="type">memory_address_class</span> <span class="variable-name">class</span>=memory_classify_address(block);
+        <span class="keyword">switch</span>(class){
+          <span class="keyword">case</span> memory_free_next:
+              fprintf(out,<span class="string">"%08x: size: %08x   next: %08x  free\n"</span>,
+                      block,memory_block_size(block),memory_block_next(block));
+              <span class="keyword">break</span>;
+          <span class="keyword">case</span> memory_allocated_block:
+              fprintf(out,<span class="string">"%08x: size: %08x   next: %08x  allocated\n"</span>,
+                      block,memory_block_size(block),block+memory_block_size(block));
+              <span class="keyword">break</span>;
+          <span class="keyword">default</span>:
+              fprintf(out,<span class="string">"%08x: %02x\n"</span>,
+                      block,class);}
+        block=block+memory_block_size(block)+MEMORY_WORDSIZE;}}
+
+<span class="type">void</span> <span class="function-name">test_round_up</span>(){
+    <span class="keyword">for</span>(<span class="type">unsigned</span> <span class="type">int</span> <span class="variable-name">i</span>=0;i&lt;17;i++){
+        printf(<span class="string">"%u -&gt; %u\n"</span>,i,memory_round_up(i));}}
+
+<span class="type">void</span> <span class="function-name">test_malloc_free</span>(){
+    <span class="type">int</span> <span class="variable-name">count</span>=6;
+    <span class="type">void</span>* <span class="variable-name">blocks</span>[count];
+    printf(<span class="string">"// Initialize\n"</span>);
+    memory_initialize();
+    printf(<span class="string">"// Before:\n"</span>);
+    memory_dump(stdout);
+    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable-name">i</span>=0;i&lt;count;i++){
+        blocks[i]=malloc(10*i);}
+    printf(<span class="string">"// After malloc's:\n"</span>);
+    memory_dump(stdout);
+    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable-name">i</span>=0;i&lt;count;i+=2){
+        free(blocks[i]);
+        blocks[i]=<span class="constant">NULL</span>;}
+    printf(<span class="string">"// After free's:\n"</span>);
+    memory_dump(stdout);
+    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable-name">i</span>=0;i&lt;count;i+=2){
+        blocks[i]=malloc(10*i+5);}
+    printf(<span class="string">"// After malloc's:\n"</span>);
+    memory_dump(stdout);}
+
+<span class="comment-delimiter">/*</span><span class="comment">
+-*- mode: compilation; default-directory: "~/src/c/tail/" -*-
+Compilation started at Mon Sep  7 18:37:20
+
+SRC="/Users/pjb/src/c/tail/memory.c" ; EXE="memory" ; clang -DDEBUG -I. -L. -g3 -ggdb3 -o ${EXE} ${SRC} &amp;&amp;  ./${EXE} &amp;&amp; echo status = $?
+// Initialize
+// Before:
+00000004: size: 00000004   next: 0000000c  free
+0000000c: size: 000000f4   next: 00000000  free
+// After malloc's:
+00000004: size: 00000004   next: 000000c4  free
+0000000c: size: 00000004   next: 00000010  allocated
+00000014: size: 0000000c   next: 00000020  allocated
+00000024: size: 00000014   next: 00000038  allocated
+0000003c: size: 00000020   next: 0000005c  allocated
+00000060: size: 00000028   next: 00000088  allocated
+0000008c: size: 00000034   next: 000000c0  allocated
+000000c4: size: 0000003c   next: 00000000  free
+// After free's:
+00000004: size: 00000004   next: 00000060  free
+0000000c: size: 00000004   next: 000000c4  free
+00000014: size: 0000000c   next: 00000020  allocated
+00000024: size: 00000014   next: 0000000c  free
+0000003c: size: 00000020   next: 0000005c  allocated
+00000060: size: 00000028   next: 00000024  free
+0000008c: size: 00000034   next: 000000c0  allocated
+000000c4: size: 0000003c   next: 00000000  free
+// After malloc's:
+00000004: size: 00000004   next: 000000f8  free
+0000000c: size: 00000004   next: 00000000  free
+00000014: size: 0000000c   next: 00000020  allocated
+00000024: size: 00000008   next: 0000002c  allocated
+00000030: size: 00000008   next: 0000000c  free
+0000003c: size: 00000020   next: 0000005c  allocated
+00000060: size: 0000001c   next: 0000007c  allocated
+00000080: size: 00000008   next: 00000030  free
+0000008c: size: 00000034   next: 000000c0  allocated
+000000c4: size: 00000030   next: 000000f4  allocated
+000000f8: size: 00000008   next: 00000080  free
+status = 0
+
+Compilation finished at Mon Sep  7 18:37:20
+
+</span><span class="comment-delimiter">*/</span>
+<span class="type">int</span> <span class="function-name">main</span>(){
+    test_malloc_free();    
+    <span class="keyword">return</span> 0;}
+
+
+</pre>
+  </body>
+</html>

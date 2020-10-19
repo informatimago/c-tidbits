@@ -1,0 +1,9 @@
+This project demonstrates how to link a shared  library using another shared library:
+
+libx  both export a() b() c() and d()
+libwx define x_a() x_b() (calling to libx).
+
+
+
+
+See also https://github.com/informatimago/c-tidbits

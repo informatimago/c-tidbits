@@ -9,7 +9,4 @@ int main(void){
     int* p=a;
     f(p);
     f(a);
-}
-
-0x7fff505aca4c
-0x7fff505aca4c
+    return 0;}
