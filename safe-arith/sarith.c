@@ -5,9 +5,9 @@
 //SYSTEM:             POSIX
 //USER-INTERFACE:     NONE
 //DESCRIPTION
-//    
+//
 //    Defines a safe C arithmetic API.
-//    
+//
 //AUTHORS
 //    <PJB> Pascal J. Bourguignon <pjb@informatimago.com>
 //MODIFICATIONS
@@ -15,19 +15,19 @@
 //BUGS
 //LEGAL
 //    AGPL3
-//    
+//
 //    Copyright Pascal J. Bourguignon 2020 - 2020
-//    
+//
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//    
+//
 //    This program is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU Affero General Public License for more details.
-//    
+//
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //****************************************************************************
@@ -267,7 +267,7 @@ void BcArithmetic_signal_error(BcArithmetic_error error,
     genifun(i32,int32_t,INT32_MIN,INT32_MAX)                            \
     genifun(i64,int64_t,INT64_MIN,INT64_MAX)                            \
     genufun(u128,uint128_t,UINT128_MAX)                                 \
-    genifun(i128,int128_t,INT128_MIN,INT128_MAX) 
+    genifun(i128,int128_t,INT128_MIN,INT128_MAX)
 #else
 #define genfuns()                                                       \
     genufun(u8,uint8_t,UINT8_MAX)                                       \
@@ -277,11 +277,11 @@ void BcArithmetic_signal_error(BcArithmetic_error error,
     genifun(i8,int8_t,INT8_MIN,INT8_MAX)                                \
     genifun(i16,int16_t,INT16_MIN,INT16_MAX)                            \
     genifun(i32,int32_t,INT32_MIN,INT32_MAX)                            \
-    genifun(i64,int64_t,INT64_MIN,INT64_MAX) 
+    genifun(i64,int64_t,INT64_MIN,INT64_MAX)
 #endif
 
 genfuns()
-    
+
 float fadd(float a,float b){return a+b;}
 float fsub(float a,float b){return a-b;}
 float fmul(float a,float b){return a*b;}
@@ -314,7 +314,7 @@ void fprint_argument(FILE* out,const BcArithmetic_argument* argument){
 #ifdef GCC
         typetag_case(uint128_t);
         typetag_case(int128_t);
-#endif        
+#endif
         typetag_case(float);
         typetag_case(double);}}
 
@@ -370,11 +370,11 @@ int main(){
     plimit("%24u",UINT16_MAX);
     plimit("%24u",UINT32_MAX);
     plimit("%24llu",UINT64_MAX);
-    plimit("%24d",INT8_MIN);      plimit("%24d",INT8_MAX);   
-    plimit("%24d",INT16_MIN);     plimit("%24d",INT16_MAX);  
-    plimit("%24d",INT32_MIN);     plimit("%24d",INT32_MAX);  
+    plimit("%24d",INT8_MIN);      plimit("%24d",INT8_MAX);
+    plimit("%24d",INT16_MIN);     plimit("%24d",INT16_MAX);
+    plimit("%24d",INT32_MIN);     plimit("%24d",INT32_MAX);
     plimit("%24lld",INT64_MIN);   plimit("%24lld",INT64_MAX);
-                
+
     BcArithmetic_error_handler=test_error_handler;
 
     int test_success_count=0;
