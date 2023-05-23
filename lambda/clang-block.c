@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "clang-block.h"
 
+#ifdef __clang__
+
 typedef void (^block_callback)(int counter);
 
 static void try_local_block(block_callback callback)
@@ -10,7 +12,6 @@ static void try_local_block(block_callback callback)
         callback(i);
     }
 }
-
 
 void test_block(void)
 {
@@ -23,3 +24,9 @@ void test_block(void)
     try_local_block(local_block);
     printf("block local counter = %d\n", local_counter);
 }
+
+#else
+void test_block(void)
+{
+}
+#endif

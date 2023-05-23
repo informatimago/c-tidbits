@@ -1,10 +1,20 @@
 PGMS = test-lambda-gcc test-lambda-clang
-all:$(PGMS)
-SOURCES = $(wildcard *.c)
+SOURCES = clang-block.c gcc-local-function.c lambda.c main.c
+
+ifeq ($(shell uname -s),Darwin)
+        BLOCKS = -fblocks -lSystem
+else
+	BLOCKS = -fblocks -lBlocksRuntime
+endif
+
+all:run
+run:$(PGMS)
+	@for pgm in $(PGMS) ; do echo // ====== $$pgm ; ./$$pgm ; done
+	@echo // =======
 test-lambda-gcc: $(SOURCES)
-	gcc            -DHAS_LOCAL_FUNCTIONS -UHAS_BLOCKS -std=c99 -o $@ $^
+	gcc -std=c99 -o $@ $^
 test-lambda-clang: $(SOURCES)
-	clang -fblocks -UHAS_LOCAL_FUNCTIONS -DHAS_BLOCKS -std=c99 -o $@ $^
+	clang $(BLOCKS) -std=c99 -o $@ $^ 
 
 clean:
 	-rm -f $(PGMS)
