@@ -2,9 +2,9 @@ PGMS = test-lambda-gcc test-lambda-clang
 SOURCES = clang-block.c gcc-local-function.c lambda.c main.c
 
 ifeq ($(shell uname -s),Darwin)
-        BLOCKS = -fblocks -lSystem
+BLOCKS = -fblocks -lSystem
 else
-	BLOCKS = -fblocks -lBlocksRuntime
+BLOCKS = -fblocks -lBlocksRuntime
 endif
 
 all:run
