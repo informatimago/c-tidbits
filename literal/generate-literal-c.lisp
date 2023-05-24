@@ -8,4 +8,5 @@ int int_sin_table[]={
   :for s := (round (* #.(expt 2 30) (sin phi)))
   :do (format t "~:[~;~%~]~12D," (zerop (mod n 32)) s)
   :finally (format t "};~%int int_sin_table_count=~A;~%" n))
+(finish-output)
 
