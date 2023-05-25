@@ -13,14 +13,19 @@
 #error "No known way to define lambda, blocks or local functions."
 #endif
 
-typedef void (FUN localfun_callback)(int counter);
+typedef void (FUN callback)(int counter);
 
-static void try_local_function(localfun_callback callback)
+static void try_callback(callback callback)
 {
   int i;
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < 3; i++) {
     callback(i);
   }
+}
+
+
+void global_function(int counter){
+  printf("global counter = %d\n", counter);
 }
 
 void test_lambda(void)
@@ -30,7 +35,10 @@ void test_lambda(void)
       printf("lambda counter = %d\n", counter);
       local_counter = counter;
   };
-
-  try_local_function(local_function);
+  FLET(void,global_wrapper,(int counter)){
+        global_function(counter);
+    };
+  try_callback(local_function);
+  try_callback(global_wrapper);
   printf("lambda local counter = %d\n", local_counter);
 }

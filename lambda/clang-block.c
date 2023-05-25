@@ -8,7 +8,7 @@ typedef void (^block_callback)(int counter);
 static void try_local_block(block_callback callback)
 {
     int i;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 3; i++) {
         callback(i);
     }
 }

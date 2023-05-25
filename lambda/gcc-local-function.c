@@ -7,7 +7,7 @@ typedef void (*localfun_callback)(int counter);
 static void try_local_function(localfun_callback callback)
 {
     int i;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 3; i++) {
         callback(i);
     }
 }
