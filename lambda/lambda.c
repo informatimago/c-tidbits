@@ -4,11 +4,11 @@
 #if defined(__clang__)
 #define VAR __block
 #define FUN ^
-#define FLET(retype,name,lambda_list,body) retype (^ name) lambda_list = ^ lambda_list body ;
+#define FLET(retype,name,lambda_list) retype (^ name) lambda_list = ^ lambda_list 
 #elif defined(__GNUC__) || defined(__GNUG__)
 #define VAR
 #define FUN *
-#define FLET(retype,name,lambda_list,body) retype name lambda_list body
+#define FLET(retype,name,lambda_list) retype name lambda_list 
 #else
 #error "No known way to define lambda, blocks or local functions."
 #endif
@@ -26,10 +26,10 @@ static void try_local_function(localfun_callback callback)
 void test_lambda(void)
 {
   VAR int local_counter = 0;
-  FLET(void,local_function,(int counter),{\
-      printf("lambda counter = %d\n", counter);\
-      local_counter = counter;\
-    })
+  FLET(void,local_function,(int counter)){
+      printf("lambda counter = %d\n", counter);
+      local_counter = counter;
+  };
 
   try_local_function(local_function);
   printf("lambda local counter = %d\n", local_counter);
