@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-
 #if defined(__GNUC__) || defined(__clang__)
   #define HYP_FUNCTION_ATTR(a)    __attribute__((a))
 #define HYP_FUNCTION_ATTR2(a,b)    __attribute__((a ## b))
@@ -16,7 +15,6 @@
 #define NORETURN_FP HYP_FUNCTION_ATTR(__noreturn__)
 #define NORETURN HYP_FUNCTION_ATTR(__noreturn__)
 #define noreturn HYP_FUNCTION_ATTR(__noreturn__)
-
 
 void NORETURN foo1(void)
 {
