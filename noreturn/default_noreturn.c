@@ -2,6 +2,13 @@
 #include <setjmp.h>
 
 
+#define __foo__ __attribute__((foo))
+#define foo __noreturn__
+
+__foo__ void foo0(void) {
+    exit(0);
+}
+
 #if 0
 /* Rejected by gcc & clang */
 void __noreturn foo1(void) {
