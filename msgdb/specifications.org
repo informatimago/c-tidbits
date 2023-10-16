@@ -1,5 +1,4 @@
 * Possible Solutions to the Problem of Source Information Leaking
-
 ** Avoid inclusion
 
 A simple solution would be to define a macro that would expand to a
@@ -13,7 +12,6 @@ the source information only when compiled in debug mode.
 #endif
 
 This will make it more difficult to interpret bug reports.
-
 
 ** Specifications of Source ID processing tool
 
